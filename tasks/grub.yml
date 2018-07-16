@@ -1,0 +1,2 @@
+## 2MB fragments for Ellesmere are enabled with a grub option:
+##   GRUB_CMDLINE_LINUX="amdgpu.vm_fragment_size=9"

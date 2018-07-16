@@ -1,0 +1,5 @@
+---
+# vars file for amdgpu-pro
+
+#amdgpu_pro_mirror: https://www2.ati.com/drivers/linux/ubuntu
+amdgpu_pro_group: video

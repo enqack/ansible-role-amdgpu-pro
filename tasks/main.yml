@@ -1,0 +1,56 @@
+---
+# tasks file for amdgpu-pro
+
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
+
+- name: "Check installed AMDGPU-PRO driver version"
+  shell: "dpkg -s amdgpu-pro | grep '^Version:' | sed -n -e 's/^Version: //p'"
+  register: amdgpu_pro_installed_version
+  ignore_errors: yes
+  failed_when: false
+  changed_when: false
+  check_mode: no
+
+- name: Set fact if requested version of AMDGPU-PRO driver is already installed
+  set_fact: amdgpu_pro_installed={{ amdgpu_pro_installed_version.stdout_lines[0] is defined and amdgpu_pro_installed_version.stdout_lines[0] == amdgpu_pro_version }}
+
+- name: Download AMDGPU-PRO drivers
+  get_url:
+    url: "{{ amdgpu_pro_mirror }}/amdgpu-pro-{{ amdgpu_pro_version }}.tar.xz"
+    dest: "/tmp/amdgpu-pro-{{ amdgpu_pro_version }}.tar.xz"
+    headers: "Referer: http://support.amd.com"
+  when: not amdgpu_pro_installed
+
+- name: Extract AMDGPU-PRO drivers
+  unarchive:
+    src: "/tmp/amdgpu-pro-{{ amdgpu_pro_version }}.tar.xz"
+    dest: /tmp
+    copy: false
+  when: not amdgpu_pro_installed
+
+- name: Install AMDGPU-PRO drivers
+  become: true
+  shell: /tmp/amdgpu-pro-{{ amdgpu_pro_version }}/amdgpu-pro-install -y --compute
+  when: not amdgpu_pro_installed
+
+# - name: Reboot required
+#   notify: reboot machine
+#   when: not amdgpu_pro_installed and amdgpu_pro_reboot
+#   command: shutdown -r 
+
+- name: Reboot required
+  shell: shutdown -r now "ansible reboot"
+  async: 0
+  poll: 1
+  when: not amdgpu_pro_installed
+
+- name: Wait for required reboot
+  local_action: wait_for host={{ ansible_ssh_host }} state=started port=22 delay=15 timeout=300 connect_timeout=5 
+  when: not amdgpu_pro_installed
+
+- name: Delete archive
+  file: path="/tmp/amdgpu-pro-{{ amdgpu_pro_version }}.tar.xz" state=absent
+  when: not amdgpu_pro_installed

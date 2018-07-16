@@ -1,0 +1,11 @@
+---
+# defaults file for amdgpu-pro
+
+# https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-17.40-492261.tar.xz
+# https://www2.ati.com/drivers/linux/beta/ubuntu/amdgpu-pro-17.40-483984.tar.xz
+
+amdgpu_pro_version: 17.40-483984
+amdgpu_pro_mirror: "https://www2.ati.com/drivers/linux/beta/ubuntu"
+
+amdgpu_pro_video_group_members:
+  - "{{ ansible_user }}"
